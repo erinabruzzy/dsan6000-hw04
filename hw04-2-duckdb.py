@@ -36,13 +36,29 @@ if __name__ == "__main__":
   # the given S3 URI, generate the plot from the results as described in the
   # main notebook, then use plt.savefig() to export it as
   # yearly_fatalities_duckdb.svg
-  
+
+  ### BEGIN
   yearly_count_query = """
-  SELECT * FROM 's3://dsan6000-data/acled_events.parquet'
-  LIMIT 5;
+  SELECT year, SUM(fatalities) AS fatalities
+  FROM 's3://dsan6000-data/acled_events.parquet'
+  WHERE year >= 2018 AND year <= 2024
+  GROUP BY year
+  ORDER BY year;
   """
+
   result_df = con.execute(yearly_count_query).df()
-  print(result_df)
+
+  sns.lineplot(
+    data=result_df,
+    x='year',
+    y='fatalities',
+    marker='o'
+  )
+
+  plt.title('ACLED: Yearly Fatality Counts (DuckDB)')
+  plt.tight_layout()
+  plt.savefig('images/yearly_fatalities_duckdb.svg')
+  ### END
   
   memory_post = compute_memory_usage('outputs/hw04-2-duckdb-post.txt')
   print(f'{memory_post:.2f} MB used post-computation')
